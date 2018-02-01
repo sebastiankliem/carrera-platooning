@@ -16,16 +16,14 @@ void setup(){
     Wire.write(0x6B);  // PWR_MGMT_1 register
     Wire.write(0);     // set to zero (wakes up the MPU-6050)
     Wire.endTransmission(true);
-    Serial.begin(19200);
+    Serial.begin(230400);
       
     pinMode(4, OUTPUT);
     pinMode(5, OUTPUT);
     pinMode(MOTOR_PIN, OUTPUT);
 }
 
-const int FAST = 0.6 * 255;
-const int MEDIUM = 0.5 * 255;
-const int SLOW = 0.3 * 255;
+
 
 void loop(){
     
@@ -44,25 +42,27 @@ void loop(){
     //Serial.print("AcX = "); Serial.print(abs(AcX));
     //Serial.print(" | AcY = "); Serial.print(abs(AcY));
     //Serial.print(" | AcZ = "); Serial.println(abs(AcZ));
-    Serial.print(" | GyX = "); Serial.print(abs(GyX));
-    Serial.print(" | GyY = "); Serial.print(abs(GyY));
+    //Serial.print(" | GyX = "); Serial.print(abs(GyX));
+    //Serial.print(" | GyY = "); Serial.print(abs(GyY));
     Serial.print(" | GyZ = "); Serial.println(abs(GyZ));
     
     int speed = 0;
-    if(abs(GyZ) > 3000) {
-        speed = 115;
+    if(abs(GyZ) > 16000) {
+        speed = 0;
         digitalWrite(LED1_PIN, 1);
         digitalWrite(LED2_PIN, 1);
-    } else if (abs(GyZ) > 2250) {
-        speed = 125;
+    /*
+    } else if (abs(GyZ) > 7500) {
+        speed = 135;
         digitalWrite(LED1_PIN, 1);
         digitalWrite(LED2_PIN, 0);
-    } else if (abs(GyZ) > 1500) {
-        speed = 132;
+    } else if (abs(GyZ) > 5000) {
+        speed = 155;
         digitalWrite(LED1_PIN, 0);
         digitalWrite(LED2_PIN, 1);
+    */
     } else {
-        speed = 140;
+        speed = 160;
         digitalWrite(LED1_PIN, 0);
         digitalWrite(LED2_PIN, 0);
     }
@@ -72,6 +72,6 @@ void loop(){
     //digitalWrite(LED1_PIN, speed == SLOW   || speed == FAST);
     //digitalWrite(LED2_PIN, speed == MEDIUM || speed == FAST);
             
-    delay(20);
+    //delay(20);
 }
 
