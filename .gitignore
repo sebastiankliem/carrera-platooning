@@ -1,1 +1,3 @@
 .vscode
+*.png
+!car/*.png
