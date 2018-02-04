@@ -1,3 +1,4 @@
+#include <PID_v1.h>
 #include "Adafruit_VL53L0X.h"
 #include<Wire.h>
 
@@ -13,23 +14,28 @@ const int LED2_PIN = 5;
 const int MOTOR_PIN = 9;
 
 const int baseSpeed     = 150;
-int currentSpeed  = baseSpeed;
+double currentSpeed  = baseSpeed;
 const int minSpeed      = 0;
 const int maxSpeed      = 255;
 
-const int baseDistance = 160;
+double baseDistance = 160;
 
 int acceleration  = 10;
 int brake         = -30;
 
 
-int distance = 0;
+double distance = 0;
 int lastDistance = 0;
 int deviation = 0;
 int deviationChange = 0;
 
 // ToF measure
 VL53L0X_RangingMeasurementData_t measure;
+
+// PID
+double aggKp=4, aggKi=0.2, aggKd=1;
+double consKp=1, consKi=0.1, consKd=0.25;
+PID myPID(&distance, &currentSpeed, &baseDistance, consKp, consKi, consKd, REVERSE);
 
 void setup() {
 
@@ -63,6 +69,9 @@ void setup() {
   if (measure.RangeStatus != 4) {  // phase failures have incorrect data
     distance = measure.RangeMilliMeter;
   }
+
+  //turn the PID on
+  myPID.SetMode(AUTOMATIC);
 }
 
 
@@ -74,15 +83,27 @@ void loop() {
   if (measure.RangeStatus != 4) {  // phase failures have incorrect data
     int newDistance = measure.RangeMilliMeter;
     distance = ema(newDistance, distance);
-    deviation = distance - baseDistance;
-    deviationChange = distance - lastDistance;
+    deviation = abs(distance - baseDistance);
+    
+    if (deviation < 25)
+    {  //we're close to setpoint, use conservative tuning parameters
+      myPID.SetTunings(consKp, consKi, consKd);
+    }
+    else
+    {
+       //we're far from setpoint, use aggressive tuning parameters
+       myPID.SetTunings(aggKp, aggKi, aggKd);
+    }
+    
+    myPID.Compute();
 
-     Serial.print("Distance (mm): "); Serial.println(distance); 
-//     Serial.print(" | currentSpeed: "); Serial.print(currentSpeed);
+    
+    Serial.print("Distance (mm): "); Serial.print(distance); 
+    Serial.print(" | currentSpeed: "); Serial.println(currentSpeed);
 //     Serial.print(" | deviation: "); Serial.print(deviation);
 //     Serial.print(" | deviationChange: "); Serial.println(deviationChange);
 
-
+/*
     if ( deviation > 200 ) {
       acceleration = 10;
     } else if ( deviation > 100 ) {
@@ -100,28 +121,10 @@ void loop() {
         acceleration = -5;
       }
     }
-
+*/
     lastDistance = distance;
-    adjustSpeed(acceleration);
-
-        if ( deviation > 200 ){
-          acceleration = 10;          
-        } else if ( deviation > 100 ) {
-          acceleration = 5;
-        } else if ( deviation > 50 ) {
-          acceleration = 1;
-        } else if ( deviation = 0 ) {
-        } else if ( deviation > -45) {
-          if(deviationChange < -25) {
-            acceleration = -1;
-          }
-          
-        } else if ( deviation > -90 ) {
-          if(deviationChange < -25) {
-            acceleration = -5;
-          }
-        } 
-
+    //‚adjustSpeed(acceleration);
+    
     /*
       if(measure.RangeMilliMeter < (baseDistance) ) {
       adjustSpeed(brake);
@@ -132,7 +135,7 @@ void loop() {
   } else {
     Serial.println(" out of range ");
   }
-
+  
 
   analogWrite(MOTOR_PIN, currentSpeed);
 
