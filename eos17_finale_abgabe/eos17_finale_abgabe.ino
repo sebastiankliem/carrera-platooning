@@ -18,7 +18,7 @@ const int LED2_PIN = 5;
 const int MOTOR_PIN = 9;
 
 // speed
-const int baseSpeed = 150;
+const int baseSpeed = 100;
 double currentSpeed = baseSpeed;
 const int minSpeed = 0;
 const int maxSpeed = 255;
@@ -27,9 +27,10 @@ const int maxSpeed = 255;
 double baseDistance = 160;
 double distance = 0; // current distance
 int lastDistance = 0; // last measured distance
+int deviation = 0;
 
 // PID
-double aggKp=4, aggKi=0.2, aggKd=1;
+double aggKp=1, aggKi=0.1, aggKd=0.25;
 double consKp=1, consKi=0.1, consKd=0.25;
 PID myPID(&distance, &currentSpeed, &baseDistance, consKp, consKi, consKd, REVERSE);
 
@@ -82,8 +83,12 @@ void loop() {
   } else { 
     Serial.println("out of range");
   }
-
+  
   // set motor speed
+
+  if(currentSpeed > 150) {
+    currentSpeed = 150;
+  }
   analogWrite(MOTOR_PIN, currentSpeed);
 
   /*
