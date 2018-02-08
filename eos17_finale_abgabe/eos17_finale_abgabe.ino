@@ -63,7 +63,7 @@ void loop() {
   if (measure.RangeStatus != 4) { // successful measurement
     int newDistance = measure.RangeMilliMeter;
     distance = ema(newDistance, distance);
-    deviation = abs(distance - baseDistance);
+    int deviation = abs(distance - baseDistance);
     lastDistance = distance;
 
     // set speed using PID
